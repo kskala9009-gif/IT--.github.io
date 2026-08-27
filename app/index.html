@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="Skala — заявки, чат и консультации в одном приложении.">
+  <meta property="og:title" content="Skala — кабинет клиента">
+  <meta property="og:description" content="Расскажите о своей идее и обсудите проект с командой Skala.">
+  <meta property="og:image" content="og.png">
+  <title>Skala — кабинет клиента</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="server.css">
+</head>
+<body>
+  <section class="auth-gate" id="auth-gate" hidden>
+    <div class="auth-panel">
+      <a class="brand auth-brand" href="index.html"><span class="brand-mark"></span><span>Skala</span></a>
+      <p class="eyebrow">Личный кабинет</p>
+      <h1>Войдите в Skala.</h1>
+      <p>Мы отправим безопасную ссылку на вашу почту. Пароль придумывать не нужно.</p>
+      <form id="auth-form" class="auth-form">
+        <label><span>Электронная почта</span><input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
+        <button class="primary large" type="submit">Получить ссылку <span>→</span></button>
+      </form>
+      <p class="auth-note" id="auth-note">По ссылке вы вернётесь в свой кабинет на любом устройстве.</p>
+    </div>
+  </section>
+  <div class="app-status" id="app-status" hidden></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" data-go="dashboard"><span class="brand-mark"></span><span>Skala</span></a>
+      <nav class="nav" aria-label="Разделы приложения">
+        <button class="nav-item active" data-go="dashboard"><span>⌂</span><b>Обзор</b></button>
+        <button class="nav-item" data-go="request"><span>＋</span><b>Новая заявка</b></button>
+        <button class="nav-item" data-go="chat"><span>◌</span><b>Чат</b><i id="chat-badge">1</i></button>
+        <button class="nav-item" data-go="calls"><span>⌕</span><b>Звонки</b></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="support-card"><span class="online"></span><strong>Skala на связи</strong><p>Обычно отвечаем в течение 15 минут</p></div>
+        <button id="install-button" class="install-button" hidden>Установить приложение ↓</button>
+        <button class="user-card" data-go="profile"><span class="avatar">К</span><span><strong>Клиент Skala</strong><small>Личный кабинет</small></span><i>›</i></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="view active" data-view="dashboard">
+        <header class="topbar"><div><p class="eyebrow">Кабинет клиента</p><h1>Ваша идея начинается здесь.</h1></div><button class="round-profile" data-go="profile">К</button></header>
+        <article class="hero-card">
+          <div class="hero-content"><span class="pill">Новый проект</span><h2>Расскажите, что хотите создать.</h2><p>Ответьте на несколько вопросов — команда Skala изучит задачу и свяжется с вами прямо в приложении.</p><button class="primary" data-go="request">Создать заявку <span>→</span></button></div>
+          <div class="hero-orb"></div>
+        </article>
+        <div class="metrics">
+          <article><span>Ваши заявки</span><strong id="request-count">00</strong><small id="request-summary">Создайте первую идею</small></article>
+          <article><span>Сообщения</span><strong id="message-count">01</strong><small>Чат внутри приложения</small></article>
+          <article class="accent"><span>Быстрая связь</span><h3>Мы готовы обсудить проект.</h3><div><button data-go="chat">Открыть чат ↗</button><button data-go="calls">Позвонить ↗</button></div></article>
+        </div>
+        <div class="section-row"><div><p class="eyebrow">Последняя активность</p><h2>Ваш проект</h2></div><button class="text-button" data-go="request">Новая заявка ＋</button></div>
+        <article class="empty-state" id="request-preview"><span>✦</span><div><h3>Заявок пока нет</h3><p>Опишите идею — это займёт около трёх минут.</p></div><button class="secondary" data-go="request">Начать</button></article>
+      </section>
+
+      <section class="view" data-view="request">
+        <header class="page-header"><div><p class="eyebrow">Новый проект</p><h1>Расскажите об идее.</h1><p>Чем подробнее вводные, тем точнее будет наше предложение.</p></div><button class="close-view" data-go="dashboard">×</button></header>
+        <form id="request-form" class="request-form">
+          <fieldset class="form-section">
+            <legend><span>01</span><div><strong>Контактные данные</strong><small>Как к вам обращаться</small></div></legend>
+            <div class="fields two">
+              <label><span>Ваше имя *</span><input name="name" autocomplete="name" placeholder="Александр" required></label>
+              <label><span>Телефон *</span><input name="phone" type="tel" autocomplete="tel" placeholder="+7 999 000-00-00" required></label>
+              <label class="full"><span>Электронная почта</span><input name="email" type="email" autocomplete="email" placeholder="name@example.com"></label>
+            </div>
+          </fieldset>
+          <fieldset class="form-section">
+            <legend><span>02</span><div><strong>Задача</strong><small>Что нужно создать</small></div></legend>
+            <div class="fields two">
+              <label><span>Тип проекта *</span><select name="type" required><option value="">Выберите</option><option>Сайт компании</option><option>Интернет-магазин</option><option>Мобильное приложение</option><option>Личный кабинет</option><option>Дизайн интерфейса</option><option>Другое</option></select></label>
+              <label><span>Ориентировочный бюджет</span><select name="budget"><option>Пока не определён</option><option>до 50 000 ₽</option><option>50 000–150 000 ₽</option><option>150 000–300 000 ₽</option><option>от 300 000 ₽</option></select></label>
+              <label class="full idea-field"><span>Опишите идею *</span><textarea name="idea" rows="6" maxlength="1000" placeholder="Что должен делать продукт, для кого он и какую задачу решает?" required></textarea><small><b id="idea-count">0</b>/1000</small></label>
+              <label><span>Желаемый срок</span><input name="deadline" type="date"></label>
+              <label><span>Ссылка на пример</span><input name="reference" type="url" placeholder="https://example.com"></label>
+            </div>
+          </fieldset>
+          <fieldset class="form-section">
+            <legend><span>03</span><div><strong>Предпочтения</strong><small>Какой характер нужен проекту</small></div></legend>
+            <div class="chips">
+              <label><input type="checkbox" name="style" value="Минимализм"><span>Минимализм</span></label>
+              <label><input type="checkbox" name="style" value="Премиальный"><span>Премиальный</span></label>
+              <label><input type="checkbox" name="style" value="Яркий"><span>Яркий</span></label>
+              <label><input type="checkbox" name="style" value="Технологичный"><span>Технологичный</span></label>
+              <label><input type="checkbox" name="style" value="Деловой"><span>Деловой</span></label>
+              <label><input type="checkbox" name="style" value="Доверяю Skala"><span>Доверяю Skala</span></label>
+            </div>
+            <label class="upload" for="attachments"><input id="attachments" type="file" multiple hidden accept="image/*,.pdf,.doc,.docx"><span>↑</span><strong>Добавить примеры и документы</strong><small id="upload-note">PNG, JPG, PDF или DOC до 10 МБ</small></label>
+          </fieldset>
+          <div class="form-footer"><p>Отправляя заявку, вы соглашаетесь на обработку контактных данных для связи по проекту.</p><button class="primary large" type="submit">Отправить заявку <span>→</span></button></div>
+        </form>
+      </section>
+
+      <section class="view chat-view" data-view="chat">
+        <header class="chat-header"><div class="chat-person"><span class="team-avatar">S</span><div><strong>Команда Skala</strong><small><i class="online"></i> На связи</small></div></div><div class="chat-actions"><button data-go="calls">⌕</button><button id="chat-info">i</button></div></header>
+        <div class="chat-body" id="chat-body" aria-live="polite"></div>
+        <div class="typing" id="typing" hidden><span></span><span></span><span></span><small>Skala печатает</small></div>
+        <form class="composer" id="message-form"><label class="attach">＋<input id="chat-file" type="file" hidden></label><textarea id="message-input" rows="1" maxlength="1000" placeholder="Напишите сообщение…" required></textarea><button type="submit" class="send">↑</button></form>
+      </section>
+
+      <section class="view" data-view="calls">
+        <header class="page-header"><div><p class="eyebrow">Связь с командой</p><h1>Выберите способ звонка.</h1><p>Интернет-звонок откроется внутри приложения. Обычный звонок использует телефон.</p></div></header>
+        <div class="call-grid">
+          <article class="call-card internet"><div class="call-icon">◉</div><span class="pill">Аудио и видео</span><h2>Позвонить через интернет</h2><p>Создадим комнату консультации и добавим ссылку в чат проекта.</p><button class="primary" id="internet-call">Начать звонок <span>→</span></button></article>
+          <article class="call-card"><div class="call-icon">⌕</div><span class="pill">Обычная связь</span><h2>Позвонить по телефону</h2><p>На смартфоне откроется стандартный экран набора номера.</p><a class="secondary call-link" href="tel:+79994349009">+7 999 434-90-09 <span>→</span></a></article>
+        </div>
+        <article class="schedule"><div><span class="online"></span><strong>Сейчас мы на связи</strong><p>Если специалист занят, оставьте сообщение — мы перезвоним.</p></div><button class="text-button" data-go="chat">Написать в чат →</button></article>
+      </section>
+
+      <section class="view" data-view="profile">
+        <header class="page-header"><div><p class="eyebrow">Настройки</p><h1>Профиль клиента.</h1><p>Данные сохраняются на этом устройстве.</p></div></header>
+        <form id="profile-form" class="profile-panel">
+          <div class="profile-hero"><span class="large-avatar">К</span><div><h2 id="profile-title">Клиент Skala</h2><p>Участник проекта</p></div></div>
+          <div class="fields two"><label><span>Имя</span><input id="profile-name" name="name" placeholder="Ваше имя"></label><label><span>Телефон</span><input id="profile-phone" name="phone" type="tel" placeholder="+7 999 000-00-00"></label><label class="full"><span>Электронная почта</span><input id="profile-email" name="email" type="email" placeholder="name@example.com"></label></div>
+          <div class="profile-actions"><button class="primary" type="submit">Сохранить</button><a class="secondary" id="admin-link" href="admin.html" hidden>Кабинет команды</a><button class="text-button danger" id="logout-button" type="button" hidden>Выйти</button></div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="success-dialog" class="success-dialog"><div class="success-mark">✓</div><p class="eyebrow">Заявка отправлена</p><h2 id="success-title">Спасибо!</h2><p>Мы добавили проект в ваш кабинет и открыли обсуждение в чате.</p><button class="primary" id="success-chat">Перейти в чат <span>→</span></button></dialog>
+  <dialog id="call-dialog" class="call-dialog"><header><div><span class="online"></span><strong>Интернет-звонок Skala</strong></div><button id="close-call">×</button></header><div id="call-frame" class="call-frame"><div><span class="team-avatar">S</span><h2>Подключаем комнату…</h2><p>Разрешите доступ к микрофону и камере.</p></div></div></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="supabase-config.js"></script>
+  <script src="backend.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

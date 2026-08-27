@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090d">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Защищённый кабинет команды Skala.">
+  <title>Skala — кабинет команды</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <section class="auth-gate" id="auth-gate" hidden>
+    <div class="auth-panel">
+      <a class="brand auth-brand" href="index.html"><span class="brand-mark"></span><span>Skala</span></a>
+      <p class="eyebrow">Кабинет команды</p>
+      <h1>Войдите в Skala.</h1>
+      <p>Мы отправим безопасную ссылку на вашу рабочую почту. После входа доступ будет проверен автоматически.</p>
+      <form id="auth-form" class="auth-form">
+        <label>
+          <span>Электронная почта</span>
+          <input id="auth-email" type="email" autocomplete="email" placeholder="team@skala.ru" required>
+        </label>
+        <button class="primary large" type="submit">Получить ссылку <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="auth-note" id="auth-note">Ссылка вернёт вас прямо в кабинет команды.</p>
+    </div>
+  </section>
+
+  <section class="access-gate" id="access-gate" hidden>
+    <div class="access-panel">
+      <span class="access-icon" aria-hidden="true">◇</span>
+      <p class="eyebrow">Защищённый раздел</p>
+      <h1 id="access-title">Нет доступа</h1>
+      <p id="access-message">Этот кабинет доступен только команде Skala.</p>
+      <div class="access-actions">
+        <a class="primary" href="index.html">В кабинет клиента</a>
+        <button class="secondary" id="access-logout" type="button">Войти другим аккаунтом</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="app-status" id="app-status" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="admin-app" id="admin-app" hidden>
+    <aside class="rail">
+      <a class="brand" href="admin.html"><span class="brand-mark"></span><span>Skala</span></a>
+      <div class="rail-label">Team console</div>
+
+      <nav class="rail-nav" aria-label="Разделы кабинета">
+        <button class="rail-link active" type="button" data-section="clients">
+          <span class="rail-icon" aria-hidden="true">◎</span>
+          <span><strong>Клиенты</strong><small>Диалоги и проекты</small></span>
+        </button>
+        <button class="rail-link" type="button" data-section="requests">
+          <span class="rail-icon" aria-hidden="true">◇</span>
+          <span><strong>Заявки</strong><small>Очередь проектов</small></span>
+        </button>
+      </nav>
+
+      <div class="rail-summary">
+        <span class="live-dot"></span>
+        <strong>Рабочее пространство</strong>
+        <p>Данные синхронизируются с защищённой базой Skala.</p>
+      </div>
+
+      <div class="rail-user">
+        <span class="avatar" id="admin-avatar">S</span>
+        <span><strong id="admin-name">Команда Skala</strong><small id="admin-email">Администратор</small></span>
+        <button id="logout-button" type="button" aria-label="Выйти" title="Выйти">↗</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspace-header">
+        <div>
+          <p class="eyebrow">Операционный центр</p>
+          <h1>Клиенты и проекты.</h1>
+          <p>Все обращения, статусы и переписка — в одном месте.</p>
+        </div>
+        <div class="header-actions">
+          <span class="sync-label"><i class="live-dot"></i><span id="sync-time">Подключение…</span></span>
+          <button class="icon-button" id="refresh-button" type="button" aria-label="Обновить данные" title="Обновить">↻</button>
+        </div>
+      </header>
+
+      <section class="metrics" aria-label="Сводка">
+        <article>
+          <span>Клиенты</span>
+          <strong id="clients-count">00</strong>
+          <small>в рабочем пространстве</small>
+        </article>
+        <article>
+          <span>Все заявки</span>
+          <strong id="requests-count">00</strong>
+          <small>за всё время</small>
+        </article>
+        <article class="accent-metric">
+          <span>В работе</span>
+          <strong id="active-count">00</strong>
+          <small>требуют внимания команды</small>
+        </article>
+      </section>
+
+      <section class="operations">
+        <aside class="directory">
+          <div class="directory-head">
+            <div>
+              <p class="eyebrow" id="directory-eyebrow">Клиенты</p>
+              <h2 id="directory-title">Рабочие диалоги</h2>
+            </div>
+            <span class="directory-count" id="directory-count">0</span>
+          </div>
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="directory-search" type="search" placeholder="Найти клиента" autocomplete="off">
+          </label>
+          <div class="directory-list" id="directory-list" aria-live="polite"></div>
+        </aside>
+
+        <section class="client-space" id="client-space">
+          <div class="empty-client" id="empty-client">
+            <span aria-hidden="true">✦</span>
+            <h2>Выберите клиента</h2>
+            <p>Откройте карточку слева, чтобы увидеть заявки и продолжить переписку.</p>
+          </div>
+
+          <div class="client-workspace" id="client-workspace" hidden>
+            <header class="client-header">
+              <div class="client-identity">
+                <span class="client-avatar" id="client-avatar">К</span>
+                <div>
+                  <span class="presence"><i class="live-dot"></i> Клиент Skala</span>
+                  <h2 id="client-name">Клиент</h2>
+                  <p id="client-contacts">Контактные данные не указаны</p>
+                </div>
+              </div>
+              <a class="contact-button" id="client-phone-link" href="#" hidden>Позвонить</a>
+            </header>
+
+            <div class="client-columns">
+              <section class="projects-panel">
+                <div class="panel-heading">
+                  <div><p class="eyebrow">Проекты</p><h3>Заявки клиента</h3></div>
+                  <span id="client-request-count">0</span>
+                </div>
+                <div class="project-list" id="project-list"></div>
+              </section>
+
+              <section class="chat-panel">
+                <header class="chat-heading">
+                  <div><span class="team-avatar">S</span><span><strong>Диалог с клиентом</strong><small><i class="live-dot"></i> Защищённый чат</small></span></div>
+                  <button class="mini-button" id="refresh-chat" type="button" aria-label="Обновить сообщения" title="Обновить чат">↻</button>
+                </header>
+                <div class="chat-body" id="chat-body" aria-live="polite"></div>
+                <form class="composer" id="message-form">
+                  <label for="message-input">Ответ команде клиента</label>
+                  <div>
+                    <textarea id="message-input" rows="1" maxlength="1000" placeholder="Напишите сообщение…" required></textarea>
+                    <button class="send-button" type="submit" aria-label="Отправить сообщение">↑</button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="supabase-config.js"></script>
+  <script src="backend.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
