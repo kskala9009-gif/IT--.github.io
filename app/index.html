@@ -12,6 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="app.css">
   <link rel="stylesheet" href="server.css">
+  <link rel="stylesheet" href="install.css">
 </head>
 <body>
   <section class="auth-gate" id="auth-gate" hidden>
@@ -123,6 +124,21 @@
       </section>
     </main>
   </div>
+
+  <section class="install-sheet" id="install-sheet" hidden aria-labelledby="install-title">
+    <div class="install-dialog" role="dialog" aria-modal="true">
+      <button class="install-close" id="install-close" type="button" aria-label="Закрыть">×</button>
+      <span class="install-mark"><span class="brand-mark"></span></span>
+      <p class="eyebrow">Приложение Skala</p>
+      <h2 id="install-title">Skala всегда под рукой.</h2>
+      <p id="install-description">Установите приложение, чтобы открывать заявки, чат и звонки прямо с рабочего стола.</p>
+      <div class="install-actions">
+        <button class="primary large" id="install-action" type="button">Установить приложение <span>↓</span></button>
+        <button class="secondary" id="install-continue" type="button">Продолжить в браузере</button>
+      </div>
+      <small id="install-hint">Установка бесплатна и занимает меньше минуты.</small>
+    </div>
+  </section>
 
   <dialog id="success-dialog" class="success-dialog"><div class="success-mark">✓</div><p class="eyebrow">Заявка отправлена</p><h2 id="success-title">Спасибо!</h2><p>Мы добавили проект в ваш кабинет и открыли обсуждение в чате.</p><button class="primary" id="success-chat">Перейти в чат <span>→</span></button></dialog>
   <dialog id="call-dialog" class="call-dialog"><header><div><span class="online"></span><strong>Интернет-звонок Skala</strong></div><button id="close-call">×</button></header><div id="call-frame" class="call-frame"><div><span class="team-avatar">S</span><h2>Подключаем комнату…</h2><p>Разрешите доступ к микрофону и камере.</p></div></div></dialog>

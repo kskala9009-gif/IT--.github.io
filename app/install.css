@@ -1,0 +1,64 @@
+.install-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  padding: 22px;
+  background: #050507d9;
+  backdrop-filter: blur(18px);
+  display: grid;
+  place-items: center;
+}
+
+.install-sheet[hidden] { display: none; }
+
+.install-dialog {
+  position: relative;
+  width: min(560px, 100%);
+  padding: 46px;
+  border: 1px solid #ffffff1f;
+  border-radius: 32px;
+  background: radial-gradient(circle at 92% 5%, #705aff4f, transparent 31%), #15151a;
+  box-shadow: 0 40px 120px #000c;
+}
+
+.install-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #ffffff0b;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.install-mark {
+  width: 66px;
+  height: 66px;
+  margin-bottom: 30px;
+  border: 1px solid #ffffff1c;
+  border-radius: 21px;
+  background: #ffffff09;
+  display: grid;
+  place-items: center;
+}
+
+.install-mark .brand-mark { width: 36px; height: 36px; }
+.install-dialog h2 { max-width: 440px; margin: 0; font-size: clamp(38px, 7vw, 58px); line-height: .95; letter-spacing: -.055em; }
+.install-dialog > p:not(.eyebrow) { max-width: 460px; margin: 21px 0 0; color: #9a9aa5; font-size: 16px; line-height: 1.6; }
+.install-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 30px; }
+.install-actions .secondary { min-height: 52px; }
+.install-dialog > small { display: block; margin-top: 18px; color: #6f6f7a; font-size: 11px; line-height: 1.5; }
+.install-action-done { background: #64e99a; color: #08100b; }
+
+@media (max-width: 560px) {
+  .install-sheet { padding: 12px; align-items: end; }
+  .install-dialog { padding: 38px 24px 30px; border-radius: 28px; }
+  .install-actions { display: grid; }
+  .install-actions .primary,
+  .install-actions .secondary { width: 100%; }
+  .install-mark { margin-bottom: 25px; }
+}

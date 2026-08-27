@@ -27,6 +27,72 @@ const input = document.querySelector('#message-input');
 const toast = document.querySelector('#toast');
 const appStatus = document.querySelector('#app-status');
 const authGate = document.querySelector('#auth-gate');
+const installButton = document.querySelector('#install-button');
+const installSheet = document.querySelector('#install-sheet');
+const installAction = document.querySelector('#install-action');
+const installDescription = document.querySelector('#install-description');
+const installHint = document.querySelector('#install-hint');
+const installRequested = new URLSearchParams(location.search).get('install') === '1';
+
+const isInstalled = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isAppleMobile = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+function updateInstallPanel() {
+  installAction.hidden = false;
+  installAction.classList.remove('install-action-done');
+  if (isInstalled()) {
+    installDescription.textContent = 'Приложение Skala уже установлено на этом устройстве и готово к работе.';
+    installAction.textContent = 'Приложение установлено ✓';
+    installAction.classList.add('install-action-done');
+    installHint.textContent = 'Откройте Skala через значок на рабочем столе.';
+  } else if (installPrompt) {
+    installDescription.textContent = 'Установите приложение, чтобы открывать заявки, чат и звонки прямо с рабочего стола.';
+    installAction.innerHTML = 'Установить приложение <span>↓</span>';
+    installHint.textContent = 'Установка бесплатна и занимает меньше минуты.';
+  } else if (isAppleMobile()) {
+    installDescription.textContent = 'На iPhone нажмите «Поделиться» внизу Safari, затем выберите «На экран Домой».';
+    installAction.textContent = 'Показать инструкцию';
+    installHint.textContent = 'После добавления значок Skala появится на главном экране.';
+  } else {
+    installDescription.textContent = 'Если окно установки не появилось, откройте меню браузера и выберите «Установить приложение».';
+    installAction.textContent = 'Как установить';
+    installHint.textContent = 'В Chrome и Edge пункт установки находится в меню справа от адресной строки.';
+  }
+}
+
+function openInstallPanel() {
+  updateInstallPanel();
+  installSheet.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeInstallPanel() {
+  installSheet.hidden = true;
+  document.body.style.overflow = '';
+}
+
+async function requestInstall() {
+  if (isInstalled()) {
+    notify('Skala уже установлена');
+    return;
+  }
+  if (installPrompt) {
+    installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === 'accepted') closeInstallPanel();
+    installPrompt = null;
+    installButton.hidden = true;
+    updateInstallPanel();
+    return;
+  }
+  updateInstallPanel();
+}
+
+document.querySelector('#install-close').addEventListener('click', closeInstallPanel);
+document.querySelector('#install-continue').addEventListener('click', closeInstallPanel);
+installSheet.addEventListener('click', event => { if (event.target === installSheet) closeInstallPanel(); });
+installAction.addEventListener('click', requestInstall);
+addEventListener('keydown', event => { if (event.key === 'Escape' && !installSheet.hidden) closeInstallPanel(); });
 
 function notify(text) {
   toast.textContent = text;
@@ -318,16 +384,19 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
 addEventListener('beforeinstallprompt', event => {
   event.preventDefault();
   installPrompt = event;
-  document.querySelector('#install-button').hidden = false;
+  installButton.hidden = false;
+  if (!installSheet.hidden) updateInstallPanel();
 });
 
-document.querySelector('#install-button').onclick = async () => {
-  if (!installPrompt) return;
-  installPrompt.prompt();
-  await installPrompt.userChoice;
+installButton.onclick = openInstallPanel;
+addEventListener('appinstalled', () => {
   installPrompt = null;
-  document.querySelector('#install-button').hidden = true;
-};
+  installButton.hidden = true;
+  closeInstallPanel();
+  notify('Приложение Skala установлено');
+});
+
+if (installRequested) openInstallPanel();
 
 async function boot() {
   const first = location.hash.slice(1);
