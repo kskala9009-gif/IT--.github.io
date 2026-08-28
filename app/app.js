@@ -16,6 +16,7 @@ const backend = window.SkalaBackend;
 let serverMode = false;
 let currentUser = null;
 let installPrompt = null;
+let messagePollTimer = null;
 let requests = load(STORE.requests, []);
 let messages = load(STORE.messages, []);
 let profile = load(STORE.profile, { name: '', phone: '', email: '', role: 'client' });
@@ -150,6 +151,20 @@ function appendMessage(message, persist = false) {
   if (persist && !serverMode) save(STORE.messages, messages);
   renderMessages();
   renderDashboard();
+}
+
+function startMessagePolling() {
+  clearInterval(messagePollTimer);
+  const sync = async () => {
+    if (!currentUser || document.hidden) return;
+    try {
+      const rows = await backend.loadMessages();
+      rows.forEach(row => appendMessage(mapMessage(row)));
+    } catch (error) {
+      console.warn('Резервное обновление чата временно недоступно', error);
+    }
+  };
+  messagePollTimer = setInterval(sync, 8000);
 }
 
 function addLocalMessage(side, text, assistant = false) {
@@ -330,6 +345,7 @@ document.querySelector('#profile-form').addEventListener('submit', async event =
 
 document.querySelector('#logout-button').addEventListener('click', async () => {
   try {
+    clearInterval(messagePollTimer);
     await backend.signOut();
     currentUser = null;
     authGate.hidden = false;
@@ -426,7 +442,12 @@ async function boot() {
       name: workspace.profile?.full_name || '', phone: workspace.profile?.phone || '',
       email: currentUser.email || '', role: workspace.profile?.role || 'client'
     };
-    await backend.subscribeToMessages(row => appendMessage(mapMessage(row)));
+    try {
+      await backend.subscribeToMessages(row => appendMessage(mapMessage(row)));
+    } catch (error) {
+      console.warn('Мгновенные обновления чата недоступны, включён резервный режим', error);
+      startMessagePolling();
+    }
     authGate.hidden = true;
     appStatus.hidden = true;
     updateProfile(); renderDashboard(); renderMessages(); go(initialView);

@@ -141,6 +141,16 @@
     };
   }
 
+  async function loadMessages() {
+    const api = requireClient();
+    const { data, error } = await api.from('messages')
+      .select('*')
+      .eq('client_id', currentUser.id)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+
   async function saveProfile(profile) {
     const api = requireClient();
     const payload = {
@@ -349,6 +359,7 @@
     signIn,
     signOut,
     loadWorkspace,
+    loadMessages,
     saveProfile,
     createRequest,
     sendMessage,
