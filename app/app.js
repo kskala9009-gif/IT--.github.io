@@ -17,6 +17,7 @@ let serverMode = false;
 let currentUser = null;
 let installPrompt = null;
 let messagePollTimer = null;
+let authCooldownTimer = null;
 let requests = load(STORE.requests, []);
 let messages = load(STORE.messages, []);
 let profile = load(STORE.profile, { name: '', phone: '', email: '', role: 'client' });
@@ -108,6 +109,34 @@ function showStatus(text, type = '', duration = 0) {
   appStatus.hidden = false;
   clearTimeout(showStatus.timer);
   if (duration) showStatus.timer = setTimeout(() => { appStatus.hidden = true; }, duration);
+}
+
+function getAuthCooldownSeconds(error) {
+  const match = String(error?.message || error || '').match(/after\s+(\d+)\s+seconds?/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function startAuthCooldown(button, seconds = 60) {
+  let remaining = Math.max(1, Math.ceil(Number(seconds) || 60));
+  clearInterval(authCooldownTimer);
+  button.disabled = true;
+  button.classList.add('is-busy');
+
+  const update = () => {
+    if (remaining <= 0) {
+      clearInterval(authCooldownTimer);
+      authCooldownTimer = null;
+      button.disabled = false;
+      button.classList.remove('is-busy');
+      button.innerHTML = 'Получить ссылку <span>→</span>';
+      return;
+    }
+    button.textContent = `Повторно через ${remaining} сек.`;
+    remaining -= 1;
+  };
+
+  update();
+  authCooldownTimer = setInterval(update, 1000);
 }
 
 function isNewSessionClockSkew(error) {
@@ -405,12 +434,21 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
   button.classList.add('is-busy');
   try {
     await backend.signIn(email);
-    document.querySelector('#auth-note').textContent = 'Ссылка отправлена. Откройте письмо от Supabase и нажмите кнопку входа.';
+    document.querySelector('#auth-note').textContent = 'Ссылка отправлена. Проверьте входящие и папку «Спам», затем откройте письмо Skala.';
     showStatus('Письмо для входа отправлено', 'success', 3000);
+    startAuthCooldown(button, 60);
   } catch (error) {
-    document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
+    const seconds = getAuthCooldownSeconds(error);
+    if (seconds) {
+      document.querySelector('#auth-note').textContent = `Предыдущее письмо уже запрошено. Проверьте входящие и «Спам». Повторная отправка будет доступна через ${seconds} сек.`;
+      startAuthCooldown(button, seconds);
+    } else if (/email rate limit exceeded/i.test(String(error?.message || ''))) {
+      document.querySelector('#auth-note').textContent = 'Сейчас отправлено слишком много писем. Попробуйте ещё раз немного позже.';
+    } else {
+      document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
+    }
   } finally {
-    button.classList.remove('is-busy');
+    if (!button.disabled) button.classList.remove('is-busy');
   }
 });
 
