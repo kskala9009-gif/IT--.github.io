@@ -110,6 +110,23 @@ function showStatus(text, type = '', duration = 0) {
   if (duration) showStatus.timer = setTimeout(() => { appStatus.hidden = true; }, duration);
 }
 
+function isNewSessionClockSkew(error) {
+  return /jwt issued at future/i.test(String(error?.message || error || ''));
+}
+
+async function loadWorkspaceAfterSignIn() {
+  const retryDelays = [2000, 4000, 6000];
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await backend.loadWorkspace();
+    } catch (error) {
+      if (!isNewSessionClockSkew(error) || attempt >= retryDelays.length) throw error;
+      showStatus('Завершаем безопасный вход…');
+      await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+    }
+  }
+}
+
 function go(name) {
   views.forEach(view => view.classList.toggle('active', view.dataset.view === name));
   nav.forEach(item => item.classList.toggle('active', item.dataset.go === name));
@@ -435,7 +452,7 @@ async function boot() {
     }
     currentUser = state.user;
     showStatus('Подключаем кабинет…');
-    const workspace = await backend.loadWorkspace();
+    const workspace = await loadWorkspaceAfterSignIn();
     requests = workspace.requests.map(mapRequest);
     messages = workspace.messages.map(mapMessage);
     profile = {
@@ -452,7 +469,10 @@ async function boot() {
     appStatus.hidden = true;
     updateProfile(); renderDashboard(); renderMessages(); go(initialView);
   } catch (error) {
-    showStatus(`Сервер пока не готов: ${error.message}`, 'error');
+    const message = isNewSessionClockSkew(error)
+      ? 'Вход ещё активируется. Подождите несколько секунд и обновите страницу.'
+      : `Сервер пока не готов: ${error.message}`;
+    showStatus(message, 'error');
     updateProfile(); renderDashboard(); renderMessages();
   }
 }
