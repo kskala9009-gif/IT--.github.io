@@ -456,6 +456,7 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
       document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
     }
   } finally {
+    backend.resetCaptcha();
     if (!button.disabled) button.classList.remove('is-busy');
   }
 });
@@ -480,6 +481,7 @@ if (installRequested) openInstallPanel();
 async function boot() {
   const first = location.hash.slice(1);
   const initialView = ['dashboard', 'request', 'chat', 'calls', 'profile'].includes(first) ? first : 'dashboard';
+  backend.mountCaptcha(document.querySelector('#auth-captcha'));
   try {
     const state = await backend.init((event, user) => {
       if (event === 'SIGNED_IN' && user && !currentUser) location.reload();

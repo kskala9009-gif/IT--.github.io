@@ -38,6 +38,8 @@
 }
 .auth-form input:focus { border-color: #7185ff; box-shadow: 0 0 0 3px #7185ff1c; }
 .auth-form .primary { width: 100%; }
+.auth-captcha { min-height: 65px; overflow: hidden; }
+.auth-captcha[hidden] { display: none; }
 .auth-note { font-size: 12px; }
 
 .app-status {

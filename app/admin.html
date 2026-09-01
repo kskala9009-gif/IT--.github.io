@@ -21,6 +21,7 @@
           <span>Электронная почта</span>
           <input id="auth-email" type="email" autocomplete="email" placeholder="team@skala.ru" required>
         </label>
+        <div class="auth-captcha" id="auth-captcha" role="status" aria-live="polite" hidden></div>
         <button class="primary large" type="submit">Получить ссылку <span aria-hidden="true">→</span></button>
       </form>
       <p class="auth-note" id="auth-note">Ссылка вернёт вас прямо в кабинет команды.</p>
@@ -169,6 +170,7 @@
     </main>
   </div>
 
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
   <script src="supabase-config.js"></script>
   <script src="backend.js"></script>

@@ -6,8 +6,56 @@
   let currentUser = null;
   let messageChannel = null;
   let authSubscription = null;
+  let captchaWidgetId = null;
+  let captchaToken = '';
+  let captchaContainer = null;
+  let captchaWaitTimer = null;
+  let captchaWaitAttempts = 0;
 
   const config = () => window.SKALA_SUPABASE || {};
+
+  const captchaConfigured = () => Boolean(String(config().turnstileSiteKey || '').trim());
+
+  function mountCaptcha(container) {
+    captchaContainer = container || null;
+    if (!captchaContainer) return;
+    clearTimeout(captchaWaitTimer);
+    captchaWaitAttempts = 0;
+
+    if (!captchaConfigured()) {
+      captchaContainer.hidden = true;
+      return;
+    }
+
+    captchaContainer.hidden = false;
+    const render = () => {
+      if (!window.turnstile?.render) {
+        captchaWaitAttempts += 1;
+        if (captchaWaitAttempts >= 100) {
+          captchaContainer.textContent = 'Не удалось загрузить проверку безопасности. Обновите страницу.';
+          return;
+        }
+        captchaWaitTimer = window.setTimeout(render, 150);
+        return;
+      }
+      if (captchaWidgetId !== null) return;
+      captchaWidgetId = window.turnstile.render(captchaContainer, {
+        sitekey: String(config().turnstileSiteKey).trim(),
+        theme: 'dark',
+        callback: token => { captchaToken = String(token || ''); },
+        'expired-callback': () => { captchaToken = ''; },
+        'error-callback': () => { captchaToken = ''; }
+      });
+    };
+    render();
+  }
+
+  function resetCaptcha() {
+    captchaToken = '';
+    if (captchaWidgetId !== null && window.turnstile?.reset) {
+      window.turnstile.reset(captchaWidgetId);
+    }
+  }
 
   const configured = () => {
     const { url, publishableKey } = config();
@@ -100,11 +148,16 @@
     if (!client) throw new Error('Сервер ещё не настроен');
     const normalizedEmail = String(email || '').trim().toLowerCase();
     if (!normalizedEmail) throw new Error('Укажите email');
+    if (captchaConfigured() && !captchaToken) throw new Error('Подтвердите, что вы не робот');
 
     const redirectTo = `${location.origin}${location.pathname}`;
     const { error } = await client.auth.signInWithOtp({
       email: normalizedEmail,
-      options: { emailRedirectTo: redirectTo, shouldCreateUser: Boolean(shouldCreateUser) }
+      options: {
+        emailRedirectTo: redirectTo,
+        shouldCreateUser: Boolean(shouldCreateUser),
+        captchaToken: captchaToken || undefined
+      }
     });
     if (error) throw error;
   }
@@ -355,6 +408,8 @@
 
   window.SkalaBackend = {
     configured,
+    mountCaptcha,
+    resetCaptcha,
     init,
     signIn,
     signOut,

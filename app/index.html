@@ -23,6 +23,7 @@
       <p>Мы отправим безопасную ссылку на вашу почту. Пароль придумывать не нужно.</p>
       <form id="auth-form" class="auth-form">
         <label><span>Электронная почта</span><input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
+        <div class="auth-captcha" id="auth-captcha" role="status" aria-live="polite" hidden></div>
         <button class="primary large" type="submit">Получить ссылку <span>→</span></button>
       </form>
       <p class="auth-note" id="auth-note">По ссылке вы вернётесь в свой кабинет на любом устройстве.</p>
@@ -143,6 +144,7 @@
   <dialog id="success-dialog" class="success-dialog"><div class="success-mark">✓</div><p class="eyebrow">Заявка отправлена</p><h2 id="success-title">Спасибо!</h2><p>Мы добавили проект в ваш кабинет и открыли обсуждение в чате.</p><button class="primary" id="success-chat">Перейти в чат <span>→</span></button></dialog>
   <dialog id="call-dialog" class="call-dialog"><header><div><span class="online"></span><strong>Интернет-звонок Skala</strong></div><button id="close-call">×</button></header><div id="call-frame" class="call-frame"><div><span class="team-avatar">S</span><h2>Подключаем комнату…</h2><p>Разрешите доступ к микрофону и камере.</p></div></div></dialog>
   <div id="toast" class="toast" role="status"></div>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
   <script src="supabase-config.js"></script>
   <script src="backend.js"></script>

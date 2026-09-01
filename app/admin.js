@@ -22,6 +22,33 @@ const state = {
   messageToken: 0,
   chatTimer: null
 };
+let authCooldownTimer = null;
+
+function getAuthCooldownSeconds(error) {
+  const match = String(error?.message || error || '').match(/after\s+(\d+)\s+seconds?/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function startAuthCooldown(button, seconds = 60) {
+  let remaining = Math.max(1, Math.ceil(Number(seconds) || 60));
+  clearInterval(authCooldownTimer);
+  button.disabled = true;
+  button.classList.add('is-busy');
+  const update = () => {
+    if (remaining <= 0) {
+      clearInterval(authCooldownTimer);
+      authCooldownTimer = null;
+      button.disabled = false;
+      button.classList.remove('is-busy');
+      button.innerHTML = 'Получить ссылку <span aria-hidden="true">→</span>';
+      return;
+    }
+    button.textContent = `Повторить через ${remaining} сек.`;
+    remaining -= 1;
+  };
+  update();
+  authCooldownTimer = setInterval(update, 1000);
+}
 
 const elements = {
   authGate: document.querySelector('#auth-gate'),
@@ -359,10 +386,20 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
   try {
     await backend.signIn(email, { shouldCreateUser: false });
     document.querySelector('#auth-note').textContent = 'Ссылка отправлена. Откройте письмо и подтвердите вход.';
+    startAuthCooldown(button, 60);
   } catch (error) {
-    document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
+    const seconds = getAuthCooldownSeconds(error);
+    if (seconds) {
+      document.querySelector('#auth-note').textContent = `Письмо уже запрошено. Повторная отправка будет доступна через ${seconds} сек.`;
+      startAuthCooldown(button, seconds);
+    } else if (/email rate limit exceeded/i.test(String(error?.message || ''))) {
+      document.querySelector('#auth-note').textContent = 'Сейчас отправлено слишком много писем. Попробуйте ещё раз немного позже.';
+    } else {
+      document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
+    }
   } finally {
-    button.classList.remove('is-busy');
+    backend.resetCaptcha();
+    if (!button.disabled) button.classList.remove('is-busy');
   }
 });
 
@@ -451,6 +488,7 @@ document.querySelector('#access-logout').addEventListener('click', signOut);
 
 async function boot() {
   showStatus('Проверяем доступ…');
+  backend.mountCaptcha(document.querySelector('#auth-captcha'));
   try {
     const session = await backend.init((event, user) => {
       if (event === 'SIGNED_IN' && user && !state.user) location.reload();
