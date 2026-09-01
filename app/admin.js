@@ -357,7 +357,7 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
   const button = event.currentTarget.querySelector('button');
   button.classList.add('is-busy');
   try {
-    await backend.signIn(email);
+    await backend.signIn(email, { shouldCreateUser: false });
     document.querySelector('#auth-note').textContent = 'Ссылка отправлена. Откройте письмо и подтвердите вход.';
   } catch (error) {
     document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;

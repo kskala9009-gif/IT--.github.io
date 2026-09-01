@@ -96,7 +96,7 @@
     return { configured: true, user: currentUser };
   }
 
-  async function signIn(email) {
+  async function signIn(email, { shouldCreateUser = true } = {}) {
     if (!client) throw new Error('Сервер ещё не настроен');
     const normalizedEmail = String(email || '').trim().toLowerCase();
     if (!normalizedEmail) throw new Error('Укажите email');
@@ -104,7 +104,7 @@
     const redirectTo = `${location.origin}${location.pathname}`;
     const { error } = await client.auth.signInWithOtp({
       email: normalizedEmail,
-      options: { emailRedirectTo: redirectTo, shouldCreateUser: true }
+      options: { emailRedirectTo: redirectTo, shouldCreateUser: Boolean(shouldCreateUser) }
     });
     if (error) throw error;
   }
