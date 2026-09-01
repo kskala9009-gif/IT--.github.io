@@ -12,6 +12,14 @@ const esc = value => String(value).replace(/[&<>"']/g, char => ({
 }[char]));
 const timeOf = value => new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(value ? new Date(value) : new Date());
 
+function displayChatText(value) {
+  const text = String(value || '').trim();
+  if (/^(?:Интернет-звонок|Создана комната интернет-звонка)\s*:?\s*https?:\/\//i.test(text)) {
+    return 'Пропущенный звонок';
+  }
+  return text;
+}
+
 const backend = window.SkalaBackend;
 let serverMode = false;
 let currentUser = null;
@@ -242,7 +250,7 @@ function renderMessages() {
   }
   messages.forEach(message => {
     const label = message.assistant ? `Команда Skala · ${message.time}` : message.time;
-    html += `<div class="message ${message.side}${message.file ? ' file' : ''}">${esc(message.text)}<small>${esc(label)}</small></div>`;
+    html += `<div class="message ${message.side}${message.file ? ' file' : ''}">${esc(displayChatText(message.text))}<small>${esc(label)}</small></div>`;
   });
   chatBody.innerHTML = html;
   requestAnimationFrame(() => { chatBody.scrollTop = chatBody.scrollHeight; });

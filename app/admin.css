@@ -641,3 +641,34 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Повышенная читаемость служебного текста на больших и тёмных экранах. */
+body { -webkit-font-smoothing: auto; text-rendering: optimizeLegibility; }
+.eyebrow,
+.rail-label,
+.metrics article > span { color: #aeb5c4; font-size: 11px; }
+.rail-link small,
+.rail-summary p,
+.rail-user small,
+.metrics article > small,
+.directory-main small,
+.directory-side time,
+.client-identity p,
+.project-card p,
+.project-meta,
+.no-projects,
+.chat-heading small,
+.chat-day,
+.chat-empty { color: #969eae; font-size: 10.5px; font-weight: 500; }
+.sync-label,
+.search-box input,
+.directory-main strong,
+.panel-kicker,
+.project-id,
+.presence { color: #b7bdc9; font-size: 11px; font-weight: 650; }
+.search-box input::placeholder,
+.composer textarea::placeholder { color: #7e8797; opacity: 1; }
+.message { color: #f3f4f8; font-size: 12px; font-weight: 520; line-height: 1.55; }
+.message small { color: #c3c8d2; font-size: 9.5px; font-weight: 550; }
+.composer > label { color: #9ba3b2; font-size: 9.5px; }
+.composer textarea { color: #fff; font-size: 12px; font-weight: 500; }
