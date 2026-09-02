@@ -129,7 +129,7 @@
     if (data?.role !== 'admin') throw new Error('Доступ только для команды Skala');
   }
 
-  async function init(onAuthChange) {
+  async function init(onAuthChange, { sessionStorageOnly = false, verifyUser = false } = {}) {
     if (!configured()) return { configured: false, user: null };
     if (!window.supabase?.createClient) throw new Error('Не удалось загрузить модуль сервера');
 
@@ -137,13 +137,26 @@
     authSubscription = null;
 
     const { url, publishableKey } = config();
-    client = window.supabase.createClient(url, publishableKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    });
+    const authOptions = {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    };
+    if (sessionStorageOnly) authOptions.storage = window.sessionStorage;
+    client = window.supabase.createClient(url, publishableKey, { auth: authOptions });
 
     const { data, error } = await client.auth.getSession();
     if (error) throw error;
     currentUser = data.session?.user || null;
+    if (currentUser && verifyUser) {
+      const verified = await client.auth.getUser();
+      if (verified.error || !verified.data.user) {
+        try { await client.auth.signOut({ scope: 'local' }); } catch {}
+        currentUser = null;
+      } else {
+        currentUser = verified.data.user;
+      }
+    }
 
     const authListener = client.auth.onAuthStateChange((event, session) => {
       const previousUserId = currentUser?.id || null;
@@ -180,14 +193,28 @@
     if (error) throw error;
   }
 
-  async function signOut() {
+  async function signOut({ scope = 'global' } = {}) {
     if (!client) return;
     if (messageChannel) await client.removeChannel(messageChannel);
     messageChannel = null;
 
-    const { error } = await client.auth.signOut();
+    const safeScope = ['global', 'local', 'others'].includes(scope) ? scope : 'global';
+    const { error } = await client.auth.signOut({ scope: safeScope });
     if (error) throw error;
     currentUser = null;
+  }
+
+  async function verifyAdminSession() {
+    const api = requireClient();
+    const { data, error } = await api.auth.getUser();
+    if (error) throw error;
+    if (!data.user) {
+      currentUser = null;
+      throw new Error('Сессия завершена');
+    }
+    currentUser = data.user;
+    await assertAdmin(api);
+    return currentUser;
   }
 
   async function loadWorkspace() {
@@ -434,6 +461,7 @@
     init,
     signIn,
     signOut,
+    verifyAdminSession,
     loadWorkspace,
     loadMessages,
     saveProfile,

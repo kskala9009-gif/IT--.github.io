@@ -1,5 +1,10 @@
 const backend = window.SkalaBackend;
 
+const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const ADMIN_MAX_SESSION_MS = 8 * 60 * 60 * 1000;
+const ADMIN_RECHECK_INTERVAL_MS = 5 * 60 * 1000;
+const ADMIN_SESSION_STARTED_KEY = 'skala-admin-session-started-at';
+
 const STATUS_OPTIONS = [
   'Новая',
   'На обсуждении',
@@ -20,9 +25,14 @@ const state = {
   section: 'clients',
   search: '',
   messageToken: 0,
-  chatTimer: null
+  chatTimer: null,
+  sessionTimer: null
 };
 let authCooldownTimer = null;
+let adminIdleTimer = null;
+let lastAdminActivity = Date.now();
+let checkingAdminSession = false;
+let endingAdminSession = false;
 
 function getAuthCooldownSeconds(error) {
   const match = String(error?.message || error || '').match(/after\s+(\d+)\s+seconds?/i);
@@ -123,11 +133,116 @@ function showStatus(message, type = '', duration = 0) {
 }
 
 function showLogin() {
+  stopAdminSessionGuards();
   elements.authGate.hidden = false;
   elements.accessGate.hidden = true;
   elements.adminApp.hidden = true;
   elements.appStatus.hidden = true;
 }
+
+function clearAuthCallbackUrl() {
+  const url = new URL(location.href);
+  const sensitiveKeys = ['code', 'token_hash', 'type', 'error', 'error_code', 'error_description'];
+  let changed = Boolean(url.hash);
+  url.hash = '';
+  sensitiveKeys.forEach(key => {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  });
+  if (changed) history.replaceState(null, '', `${url.pathname}${url.search}`);
+}
+
+function stopAdminSessionGuards() {
+  clearTimeout(adminIdleTimer);
+  clearInterval(state.sessionTimer);
+  adminIdleTimer = null;
+  state.sessionTimer = null;
+}
+
+function adminSessionStartedAt() {
+  const stored = Number(sessionStorage.getItem(ADMIN_SESSION_STARTED_KEY));
+  if (Number.isFinite(stored) && stored > 0 && stored <= Date.now()) return stored;
+  const now = Date.now();
+  sessionStorage.setItem(ADMIN_SESSION_STARTED_KEY, String(now));
+  return now;
+}
+
+function scheduleAdminIdleCheck() {
+  clearTimeout(adminIdleTimer);
+  if (!state.user) return;
+  const remaining = Math.max(0, ADMIN_IDLE_TIMEOUT_MS - (Date.now() - lastAdminActivity));
+  adminIdleTimer = setTimeout(() => {
+    if (!state.user) return;
+    if (Date.now() - lastAdminActivity >= ADMIN_IDLE_TIMEOUT_MS) {
+      void endAdminSession('Сеанс завершён после 30 минут бездействия. Войдите снова.');
+    } else {
+      scheduleAdminIdleCheck();
+    }
+  }, remaining);
+}
+
+function recordAdminActivity() {
+  if (!state.user || document.hidden) return;
+  lastAdminActivity = Date.now();
+  scheduleAdminIdleCheck();
+}
+
+async function endAdminSession(message) {
+  if (endingAdminSession) return;
+  endingAdminSession = true;
+  stopAdminSessionGuards();
+  sessionStorage.removeItem(ADMIN_SESSION_STARTED_KEY);
+  state.user = null;
+  try { await backend.signOut({ scope: 'local' }); } catch {}
+  showLogin();
+  document.querySelector('#auth-note').textContent = message;
+  endingAdminSession = false;
+}
+
+function sessionIsInvalid(error) {
+  return /сессия завершена|доступ только|permission|policy|admin|auth session missing|invalid jwt|jwt expired|refresh token/i.test(String(error?.message || error || ''));
+}
+
+async function verifyAdminAccess({ quiet = true } = {}) {
+  if (!state.user || checkingAdminSession) return Boolean(state.user);
+  if (Date.now() - adminSessionStartedAt() >= ADMIN_MAX_SESSION_MS) {
+    await endAdminSession('Рабочий сеанс завершён через 8 часов. Войдите снова.');
+    return false;
+  }
+  checkingAdminSession = true;
+  try {
+    state.user = await backend.verifyAdminSession();
+    return true;
+  } catch (error) {
+    if (sessionIsInvalid(error)) {
+      await endAdminSession('Доступ изменён или срок сеанса истёк. Войдите снова.');
+    } else if (!quiet) {
+      showStatus('Не удалось проверить сеанс. Проверьте интернет и повторите попытку.', 'error', 4500);
+    }
+    return false;
+  } finally {
+    checkingAdminSession = false;
+  }
+}
+
+function startAdminSessionGuards() {
+  stopAdminSessionGuards();
+  lastAdminActivity = Date.now();
+  adminSessionStartedAt();
+  scheduleAdminIdleCheck();
+  state.sessionTimer = setInterval(() => {
+    if (!document.hidden) void verifyAdminAccess();
+  }, ADMIN_RECHECK_INTERVAL_MS);
+}
+
+['pointerdown', 'keydown', 'touchstart'].forEach(eventName => {
+  document.addEventListener(eventName, recordAdminActivity, { passive: true });
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state.user) void verifyAdminAccess({ quiet: false });
+});
 
 function showAccessError(title, message) {
   elements.accessTitle.textContent = title;
@@ -480,7 +595,10 @@ document.querySelector('#refresh-chat').addEventListener('click', () => loadMess
 
 async function signOut() {
   clearInterval(state.chatTimer);
-  try { await backend.signOut(); } finally { showLogin(); }
+  stopAdminSessionGuards();
+  sessionStorage.removeItem(ADMIN_SESSION_STARTED_KEY);
+  state.user = null;
+  try { await backend.signOut({ scope: 'local' }); } finally { showLogin(); }
 }
 
 document.querySelector('#logout-button').addEventListener('click', signOut);
@@ -496,17 +614,19 @@ async function boot() {
         state.user = null;
         showLogin();
       }
-    });
+    }, { sessionStorageOnly: true, verifyUser: true });
 
     if (!session.configured) {
       showAccessError('Сервер не настроен', 'Добавьте публичные параметры Supabase, чтобы открыть кабинет команды.');
       return;
     }
     if (!session.user) {
+      sessionStorage.removeItem(ADMIN_SESSION_STARTED_KEY);
       showLogin();
       return;
     }
 
+    clearAuthCallbackUrl();
     state.user = session.user;
     state.overview = await backend.adminOverview();
     document.querySelector('#admin-email').textContent = state.user.email || 'Администратор';
@@ -519,6 +639,7 @@ async function boot() {
     renderAll();
     document.querySelector('#sync-time').textContent = `Обновлено ${formatTime(new Date())}`;
     if (state.selectedClientId) await loadMessages(state.selectedClientId);
+    startAdminSessionGuards();
     state.chatTimer = setInterval(() => {
       if (!document.hidden && state.selectedClientId) loadMessages(state.selectedClientId, { quiet: true });
     }, 12000);
