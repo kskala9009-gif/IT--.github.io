@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://mlounckkmowubohxhfcg.supabase.co; font-src 'self' data:; connect-src 'self' https://mlounckkmowubohxhfcg.supabase.co wss://mlounckkmowubohxhfcg.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://meet.jit.si; media-src 'self' blob: https://mlounckkmowubohxhfcg.supabase.co; worker-src 'self' blob:; manifest-src 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#08090d">
   <meta name="robots" content="noindex,nofollow">
   <meta name="description" content="Защищённый кабинет команды Skala.">
@@ -171,7 +173,7 @@
   </div>
 
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js" integrity="sha384-faMlYZUtkJj+Sh6Bmu/L0GzPcraRWN6CW+9RH3GUrK/Z0WS9tgaNNt0tHiLxsbdb" crossorigin="anonymous"></script>
   <script src="supabase-config.js"></script>
   <script src="backend.js"></script>
   <script src="admin.js"></script>
