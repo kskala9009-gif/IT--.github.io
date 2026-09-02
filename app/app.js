@@ -309,9 +309,12 @@ idea.addEventListener('input', () => { document.querySelector('#idea-count').tex
 document.querySelector('#attachments').addEventListener('change', event => {
   const files = [...event.target.files];
   const tooLarge = files.some(file => file.size > 10 * 1024 * 1024);
-  document.querySelector('#upload-note').textContent = tooLarge
+  const tooMany = files.length > 5;
+  document.querySelector('#upload-note').textContent = tooMany
+    ? 'Можно выбрать не больше 5 файлов'
+    : tooLarge
     ? 'Один из файлов больше 10 МБ'
-    : files.length ? `Выбрано файлов: ${files.length} · ${files.map(file => file.name).join(', ')}` : 'PNG, JPG, PDF или DOC до 10 МБ';
+    : files.length ? `Выбрано файлов: ${files.length} · ${files.map(file => file.name).join(', ')}` : 'До 5 файлов · PNG, JPG, PDF или DOC · каждый до 10 МБ';
 });
 
 document.querySelector('#request-form').addEventListener('submit', async event => {
@@ -319,6 +322,7 @@ document.querySelector('#request-form').addEventListener('submit', async event =
   const form = event.currentTarget;
   if (!form.reportValidity()) return;
   const files = [...document.querySelector('#attachments').files];
+  if (files.length > 5) return notify('К одной заявке можно прикрепить не больше 5 файлов');
   if (files.some(file => file.size > 10 * 1024 * 1024)) return notify('Каждый файл должен быть не больше 10 МБ');
   const data = new FormData(form);
   const styles = data.getAll('style');
@@ -354,7 +358,7 @@ document.querySelector('#request-form').addEventListener('submit', async event =
     document.querySelector('#success-dialog').showModal();
     form.reset();
     document.querySelector('#idea-count').textContent = '0';
-    document.querySelector('#upload-note').textContent = 'PNG, JPG, PDF или DOC до 10 МБ';
+    document.querySelector('#upload-note').textContent = 'До 5 файлов · PNG, JPG, PDF или DOC · каждый до 10 МБ';
   } catch (error) {
     showStatus(`Не удалось отправить заявку: ${error.message}`, 'error', 5500);
   } finally {

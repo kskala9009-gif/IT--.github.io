@@ -1,5 +1,6 @@
 (function () {
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const MAX_REQUEST_FILES = 5;
   const MAX_MESSAGE_LENGTH = 4000;
 
   let client = null;
@@ -222,6 +223,9 @@
   async function createRequest(item, files) {
     const api = requireClient();
     const selectedFiles = Array.from(files || []).map(file => ({ file, ...validateFile(file) }));
+    if (selectedFiles.length > MAX_REQUEST_FILES) {
+      throw new Error(`К одной заявке можно прикрепить не больше ${MAX_REQUEST_FILES} файлов`);
+    }
     const payload = {
       display_id: String(item.id || '').trim(),
       user_id: currentUser.id,
