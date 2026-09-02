@@ -2,6 +2,14 @@
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const MAX_REQUEST_FILES = 5;
   const MAX_MESSAGE_LENGTH = 4000;
+  const FILE_TYPES = Object.freeze({
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.pdf': 'application/pdf',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  });
 
   let client = null;
   let currentUser = null;
@@ -87,9 +95,18 @@
   function validateFile(file) {
     if (!(file instanceof Blob)) throw new Error('Не удалось прочитать выбранный файл');
     if (file.size > MAX_FILE_SIZE) throw new Error('Файл должен быть не больше 10 МБ');
+    if (file.size <= 0) throw new Error('Нельзя отправить пустой файл');
+    const name = originalFileName(file.name);
+    const extension = name.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
+    const expectedType = FILE_TYPES[extension];
+    const suppliedType = String(file.type || '').trim().toLowerCase();
+    const normalizedType = suppliedType === 'image/jpg' ? 'image/jpeg' : suppliedType;
+    if (!expectedType || (normalizedType && normalizedType !== expectedType)) {
+      throw new Error('Разрешены только JPG, PNG, WEBP, PDF и DOCX');
+    }
     return {
-      name: originalFileName(file.name),
-      contentType: String(file.type || 'application/octet-stream').slice(0, 255)
+      name,
+      contentType: expectedType
     };
   }
 

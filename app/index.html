@@ -93,7 +93,7 @@
               <label><input type="checkbox" name="style" value="Деловой"><span>Деловой</span></label>
               <label><input type="checkbox" name="style" value="Доверяю Skala"><span>Доверяю Skala</span></label>
             </div>
-            <label class="upload" for="attachments"><input id="attachments" type="file" multiple hidden accept="image/*,.pdf,.doc,.docx"><span>↑</span><strong>Добавить примеры и документы</strong><small id="upload-note">До 5 файлов · PNG, JPG, PDF или DOC · каждый до 10 МБ</small></label>
+            <label class="upload" for="attachments"><input id="attachments" type="file" multiple hidden accept=".jpg,.jpeg,.png,.webp,.pdf,.docx"><span>↑</span><strong>Добавить примеры и документы</strong><small id="upload-note">До 5 файлов · JPG, PNG, WEBP, PDF или DOCX · каждый до 10 МБ</small></label>
           </fieldset>
           <div class="form-footer"><p>Отправляя заявку, вы соглашаетесь на обработку контактных данных для связи по проекту.</p><button class="primary large" type="submit">Отправить заявку <span>→</span></button></div>
         </form>
@@ -103,7 +103,7 @@
         <header class="chat-header"><div class="chat-person"><span class="team-avatar">S</span><div><strong>Команда Skala</strong><small><i class="online"></i> На связи</small></div></div><div class="chat-actions"><button data-go="calls">⌕</button><button id="chat-info">i</button></div></header>
         <div class="chat-body" id="chat-body" aria-live="polite"></div>
         <div class="typing" id="typing" hidden><span></span><span></span><span></span><small>Skala печатает</small></div>
-        <form class="composer" id="message-form"><label class="attach">＋<input id="chat-file" type="file" hidden></label><textarea id="message-input" rows="1" maxlength="1000" placeholder="Напишите сообщение…" required></textarea><button type="submit" class="send">↑</button></form>
+        <form class="composer" id="message-form"><label class="attach">＋<input id="chat-file" type="file" hidden accept=".jpg,.jpeg,.png,.webp,.pdf,.docx"></label><textarea id="message-input" rows="1" maxlength="1000" placeholder="Напишите сообщение…" required></textarea><button type="submit" class="send">↑</button></form>
       </section>
 
       <section class="view" data-view="calls">

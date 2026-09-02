@@ -314,7 +314,7 @@ document.querySelector('#attachments').addEventListener('change', event => {
     ? 'Можно выбрать не больше 5 файлов'
     : tooLarge
     ? 'Один из файлов больше 10 МБ'
-    : files.length ? `Выбрано файлов: ${files.length} · ${files.map(file => file.name).join(', ')}` : 'До 5 файлов · PNG, JPG, PDF или DOC · каждый до 10 МБ';
+    : files.length ? `Выбрано файлов: ${files.length} · ${files.map(file => file.name).join(', ')}` : 'До 5 файлов · JPG, PNG, WEBP, PDF или DOCX · каждый до 10 МБ';
 });
 
 document.querySelector('#request-form').addEventListener('submit', async event => {
@@ -358,7 +358,7 @@ document.querySelector('#request-form').addEventListener('submit', async event =
     document.querySelector('#success-dialog').showModal();
     form.reset();
     document.querySelector('#idea-count').textContent = '0';
-    document.querySelector('#upload-note').textContent = 'До 5 файлов · PNG, JPG, PDF или DOC · каждый до 10 МБ';
+    document.querySelector('#upload-note').textContent = 'До 5 файлов · JPG, PNG, WEBP, PDF или DOCX · каждый до 10 МБ';
   } catch (error) {
     showStatus(`Не удалось отправить заявку: ${error.message}`, 'error', 5500);
   } finally {
