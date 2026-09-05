@@ -327,7 +327,7 @@ document.querySelector('#request-form').addEventListener('submit', async event =
   const data = new FormData(form);
   const styles = data.getAll('style');
   const item = {
-    id: `SK-${new Date().getFullYear()}-${Date.now().toString().slice(-8)}`,
+    id: serverMode ? '' : `SK-${new Date().getFullYear()}-${Date.now().toString().slice(-8)}`,
     createdAt: new Date().toISOString(), status: 'На обсуждении',
     name: data.get('name').trim(), phone: data.get('phone').trim(),
     email: data.get('email').trim(), type: data.get('type'), budget: data.get('budget'),

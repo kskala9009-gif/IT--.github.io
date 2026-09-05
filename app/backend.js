@@ -271,7 +271,6 @@
       throw new Error(`К одной заявке можно прикрепить не больше ${MAX_REQUEST_FILES} файлов`);
     }
     const payload = {
-      display_id: String(item.id || '').trim(),
       user_id: currentUser.id,
       contact_name: String(item.name || '').trim(),
       phone: String(item.phone || '').trim(),
@@ -317,7 +316,7 @@
       sender_id: currentUser.id,
       request_id: request.id,
       kind: 'system',
-      body: `Создана заявка ${payload.display_id}: ${payload.project_type}`
+      body: `Создана заявка ${request.display_id}: ${payload.project_type}`
     });
     if (systemMessage.error) throw systemMessage.error;
 
