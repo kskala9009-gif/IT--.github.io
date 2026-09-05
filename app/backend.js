@@ -25,6 +25,47 @@
 
   const captchaConfigured = () => Boolean(String(config().turnstileSiteKey || '').trim());
 
+  function userMessage(error, fallback = 'Не удалось выполнить действие. Попробуйте ещё раз.') {
+    const message = String(error?.message || error || '').trim();
+    const text = message.toLowerCase();
+    const code = String(error?.code || '').toLowerCase();
+
+    const safeExact = new Map([
+      ['сначала войдите в приложение', 'Сначала войдите в приложение'],
+      ['укажите email', 'Укажите email'],
+      ['подтвердите, что вы не робот', 'Подтвердите, что вы не робот'],
+      ['сессия завершена', 'Сеанс завершён. Войдите снова.'],
+      ['не удалось прочитать выбранный файл', 'Не удалось прочитать выбранный файл'],
+      ['файл должен быть не больше 10 мб', 'Файл должен быть не больше 10 МБ'],
+      ['нельзя отправить пустой файл', 'Нельзя отправить пустой файл'],
+      ['разрешены только jpg, png, webp, pdf и docx', 'Разрешены только JPG, PNG, WEBP, PDF и DOCX'],
+      ['сообщение слишком длинное', 'Сообщение слишком длинное'],
+      ['напишите сообщение или выберите файл', 'Напишите сообщение или выберите файл'],
+      ['напишите сообщение', 'Напишите сообщение'],
+      ['не выбран клиент', 'Не выбран клиент'],
+      ['не выбрана заявка', 'Не выбрана заявка'],
+      ['некорректный статус', 'Некорректный статус'],
+      ['доступ только для команды skala', 'Этот аккаунт не входит в команду Skala']
+    ]);
+    if (safeExact.has(text)) return safeExact.get(text);
+    if (/jwt|token|session.*(?:expired|invalid)|issued at future|refresh_token/.test(text)) {
+      return 'Сеанс завершён. Войдите снова.';
+    }
+    if (/rate limit|too many|security purposes|слишком много|достигнут.*лимит|p0001/.test(`${code} ${text}`)) {
+      return 'Слишком много попыток. Подождите немного и повторите.';
+    }
+    if (/row.level security|permission|policy|42501|not authorized|forbidden/.test(`${code} ${text}`)) {
+      return 'Недостаточно прав для этого действия.';
+    }
+    if (/duplicate|unique constraint|23505/.test(`${code} ${text}`)) {
+      return 'Такая запись уже существует.';
+    }
+    if (/failed to fetch|network|load failed|connection|timeout|offline/.test(text)) {
+      return 'Проверьте подключение к интернету и повторите.';
+    }
+    return fallback;
+  }
+
   function mountCaptcha(container) {
     captchaContainer = container || null;
     if (!captchaContainer) return;
@@ -477,6 +518,7 @@
     init,
     signIn,
     signOut,
+    userMessage,
     verifyAdminSession,
     loadWorkspace,
     loadMessages,

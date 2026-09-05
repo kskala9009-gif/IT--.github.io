@@ -1,4 +1,5 @@
 const backend = window.SkalaBackend;
+const safeError = (error, fallback) => backend.userMessage(error, fallback);
 
 const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const ADMIN_MAX_SESSION_MS = 8 * 60 * 60 * 1000;
@@ -447,7 +448,7 @@ async function loadMessages(clientId, { quiet = false } = {}) {
     if (quiet && previousLastId && messages.at(-1)?.id !== previousLastId) notify('В чате новое сообщение');
   } catch (error) {
     if (!quiet && token === state.messageToken) {
-      elements.chatBody.innerHTML = `<div class="chat-empty">Не удалось загрузить чат: ${escapeHtml(error.message)}</div>`;
+      elements.chatBody.innerHTML = `<div class="chat-empty">${escapeHtml(safeError(error, 'Не удалось загрузить чат. Попробуйте ещё раз.'))}</div>`;
     }
   }
 }
@@ -510,7 +511,7 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
     } else if (/email rate limit exceeded/i.test(String(error?.message || ''))) {
       document.querySelector('#auth-note').textContent = 'Сейчас отправлено слишком много писем. Попробуйте ещё раз немного позже.';
     } else {
-      document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
+      document.querySelector('#auth-note').textContent = safeError(error, 'Не удалось отправить письмо. Проверьте адрес и попробуйте ещё раз.');
     }
   } finally {
     backend.resetCaptcha();
@@ -553,7 +554,7 @@ elements.projectList.addEventListener('change', async event => {
     notify(`Статус ${request.display_id || 'заявки'} обновлён`);
   } catch (error) {
     select.value = previous;
-    notify(`Не удалось изменить статус: ${error.message}`);
+    notify(safeError(error, 'Не удалось изменить статус. Попробуйте ещё раз.'));
   } finally {
     select.classList.remove('is-busy');
   }
@@ -574,7 +575,7 @@ elements.messageForm.addEventListener('submit', async event => {
     renderMessages();
     notify('Сообщение отправлено');
   } catch (error) {
-    notify(`Не удалось отправить сообщение: ${error.message}`);
+    notify(safeError(error, 'Не удалось отправить сообщение. Попробуйте ещё раз.'));
   } finally {
     button.classList.remove('is-busy');
     elements.messageInput.disabled = false;
@@ -588,7 +589,7 @@ elements.messageInput.addEventListener('input', event => {
 });
 
 document.querySelector('#refresh-button').addEventListener('click', () => {
-  refreshOverview().catch(error => showStatus(`Не удалось обновить данные: ${error.message}`, 'error', 4500));
+  refreshOverview().catch(error => showStatus(safeError(error, 'Не удалось обновить данные. Попробуйте ещё раз.'), 'error', 4500));
 });
 
 document.querySelector('#refresh-chat').addEventListener('click', () => loadMessages(state.selectedClientId));
@@ -647,7 +648,7 @@ async function boot() {
     const denied = /доступ только|permission|policy|admin/i.test(error.message || '');
     showAccessError(
       denied ? 'Нет доступа' : 'Не удалось открыть кабинет',
-      denied ? 'Этот аккаунт не входит в команду Skala.' : `Проверьте подключение и попробуйте ещё раз. ${error.message || ''}`
+      denied ? 'Этот аккаунт не входит в команду Skala.' : safeError(error, 'Проверьте подключение и попробуйте ещё раз.')
     );
   }
 }

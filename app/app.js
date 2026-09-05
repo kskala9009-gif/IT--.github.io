@@ -21,6 +21,7 @@ function displayChatText(value, kind = '') {
 }
 
 const backend = window.SkalaBackend;
+const safeError = (error, fallback) => backend.userMessage(error, fallback);
 let serverMode = false;
 let currentUser = null;
 let installPrompt = null;
@@ -277,7 +278,7 @@ document.querySelector('#message-form').addEventListener('submit', async event =
     appendMessage(mapMessage(row));
   } catch (error) {
     input.value = text;
-    notify(`Не удалось отправить: ${error.message}`);
+    notify(safeError(error, 'Не удалось отправить сообщение. Попробуйте ещё раз.'));
   }
 });
 
@@ -298,7 +299,7 @@ document.querySelector('#chat-file').addEventListener('change', async event => {
     appendMessage(mapMessage(row));
     showStatus('Файл отправлен', 'success', 1800);
   } catch (error) {
-    showStatus(`Ошибка загрузки: ${error.message}`, 'error', 4500);
+    showStatus(safeError(error, 'Не удалось загрузить файл. Проверьте формат и попробуйте ещё раз.'), 'error', 4500);
   }
 });
 
@@ -360,7 +361,7 @@ document.querySelector('#request-form').addEventListener('submit', async event =
     document.querySelector('#idea-count').textContent = '0';
     document.querySelector('#upload-note').textContent = 'До 5 файлов · JPG, PNG, WEBP, PDF или DOCX · каждый до 10 МБ';
   } catch (error) {
-    showStatus(`Не удалось отправить заявку: ${error.message}`, 'error', 5500);
+    showStatus(safeError(error, 'Не удалось отправить заявку. Попробуйте ещё раз.'), 'error', 5500);
   } finally {
     submit.classList.remove('is-busy');
   }
@@ -397,7 +398,7 @@ document.querySelector('#profile-form').addEventListener('submit', async event =
     updateProfile();
     notify('Профиль сохранён');
   } catch (error) {
-    notify(`Не удалось сохранить: ${error.message}`);
+    notify(safeError(error, 'Не удалось сохранить профиль. Попробуйте ещё раз.'));
   }
 });
 
@@ -409,7 +410,7 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
     authGate.hidden = false;
     notify('Вы вышли из кабинета');
   } catch (error) {
-    notify(`Не удалось выйти: ${error.message}`);
+    notify(safeError(error, 'Не удалось завершить сеанс. Обновите страницу.'));
   }
 });
 
@@ -452,7 +453,7 @@ internetCallButton.onclick = async () => {
       callFrame.replaceChildren(frame);
     }, 400);
   } catch (error) {
-    notify(`Не удалось начать звонок: ${error.message}`);
+    notify(safeError(error, 'Не удалось начать звонок. Попробуйте ещё раз.'));
   } finally {
     callStarting = false;
     internetCallButton.disabled = false;
@@ -482,7 +483,7 @@ document.querySelector('#auth-form').addEventListener('submit', async event => {
     } else if (/email rate limit exceeded/i.test(String(error?.message || ''))) {
       document.querySelector('#auth-note').textContent = 'Сейчас отправлено слишком много писем. Попробуйте ещё раз немного позже.';
     } else {
-      document.querySelector('#auth-note').textContent = `Не удалось отправить письмо: ${error.message}`;
+      document.querySelector('#auth-note').textContent = safeError(error, 'Не удалось отправить письмо. Проверьте адрес и попробуйте ещё раз.');
     }
   } finally {
     backend.resetCaptcha();
@@ -548,7 +549,7 @@ async function boot() {
   } catch (error) {
     const message = isNewSessionClockSkew(error)
       ? 'Вход ещё активируется. Подождите несколько секунд и обновите страницу.'
-      : `Сервер пока не готов: ${error.message}`;
+      : safeError(error, 'Сервис временно недоступен. Попробуйте обновить страницу.');
     showStatus(message, 'error');
     updateProfile(); renderDashboard(); renderMessages();
   }
