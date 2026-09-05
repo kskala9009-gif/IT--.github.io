@@ -352,15 +352,6 @@
       }
     }
 
-    const systemMessage = await api.from('messages').insert({
-      client_id: currentUser.id,
-      sender_id: currentUser.id,
-      request_id: request.id,
-      kind: 'system',
-      body: `Создана заявка ${request.display_id}: ${payload.project_type}`
-    });
-    if (systemMessage.error) throw systemMessage.error;
-
     return request;
   }
 
