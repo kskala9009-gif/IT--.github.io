@@ -109,9 +109,9 @@ function safeUrl(value) {
   }
 }
 
-function displayChatText(value) {
+function displayChatText(value, kind = '') {
   const text = String(value || '').trim();
-  if (/^(?:Интернет-звонок|Создана комната интернет-звонка)\s*:?\s*https?:\/\//i.test(text)) {
+  if (kind === 'call' || /^(?:Интернет-звонок|Создана комната интернет-звонка)\s*:?\s*https?:\/\//i.test(text)) {
     return 'Пропущенный звонок';
   }
   return text;
@@ -429,7 +429,7 @@ function renderMessages(loading = false) {
     const side = message.kind === 'system' ? 'system' : message.sender_id === state.selectedClientId ? 'incoming' : 'outgoing';
     const attachment = message.attachment_name ? `\nВложение: ${message.attachment_name}` : '';
     const sender = side === 'incoming' ? 'Клиент' : side === 'outgoing' ? 'Skala' : '';
-    return `<div class="message ${side}">${escapeHtml(`${displayChatText(message.body)}${attachment}`)}<small>${escapeHtml([sender, formatTime(message.created_at)].filter(Boolean).join(' · '))}</small></div>`;
+    return `<div class="message ${side}">${escapeHtml(`${displayChatText(message.body, message.kind)}${attachment}`)}<small>${escapeHtml([sender, formatTime(message.created_at)].filter(Boolean).join(' · '))}</small></div>`;
   }).join('')}`;
   requestAnimationFrame(() => { elements.chatBody.scrollTop = elements.chatBody.scrollHeight; });
 }

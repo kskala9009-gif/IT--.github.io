@@ -363,6 +363,23 @@
     return data;
   }
 
+  async function startCall(roomName) {
+    const api = requireClient();
+    const room = String(roomName || '').trim();
+    if (!/^Skala-Consultation-[0-9a-f]{32}$/.test(room)) {
+      throw new Error('Не удалось создать безопасную комнату звонка');
+    }
+
+    const { data, error } = await api.from('messages').insert({
+      client_id: currentUser.id,
+      sender_id: currentUser.id,
+      body: room,
+      kind: 'call'
+    }).select().single();
+    if (error) throw error;
+    return data;
+  }
+
   async function subscribeToMessages(onMessage) {
     const api = requireClient();
     if (messageChannel) await api.removeChannel(messageChannel);
@@ -467,6 +484,7 @@
     saveProfile,
     createRequest,
     sendMessage,
+    startCall,
     subscribeToMessages,
     adminOverview,
     adminMessages,

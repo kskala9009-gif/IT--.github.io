@@ -12,9 +12,9 @@ const esc = value => String(value).replace(/[&<>"']/g, char => ({
 }[char]));
 const timeOf = value => new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(value ? new Date(value) : new Date());
 
-function displayChatText(value) {
+function displayChatText(value, kind = '') {
   const text = String(value || '').trim();
-  if (/^(?:Интернет-звонок|Создана комната интернет-звонка)\s*:?\s*https?:\/\//i.test(text)) {
+  if (kind === 'call' || /^(?:Интернет-звонок|Создана комната интернет-звонка)\s*:?\s*https?:\/\//i.test(text)) {
     return 'Пропущенный звонок';
   }
   return text;
@@ -195,7 +195,7 @@ function mapMessage(row) {
   const side = row.kind === 'system' ? 'system' : row.sender_id === currentUser?.id ? 'outgoing' : 'incoming';
   return {
     id: row.id, side, text: row.body, time: timeOf(row.created_at),
-    assistant: side === 'incoming', file: row.kind === 'file' ? row.attachment_name : ''
+    assistant: side === 'incoming', file: row.kind === 'file' ? row.attachment_name : '', kind: row.kind
   };
 }
 
@@ -250,7 +250,7 @@ function renderMessages() {
   }
   messages.forEach(message => {
     const label = message.assistant ? `Команда Skala · ${message.time}` : message.time;
-    html += `<div class="message ${message.side}${message.file ? ' file' : ''}">${esc(displayChatText(message.text))}<small>${esc(label)}</small></div>`;
+    html += `<div class="message ${message.side}${message.file ? ' file' : ''}">${esc(displayChatText(message.text, message.kind))}<small>${esc(label)}</small></div>`;
   });
   chatBody.innerHTML = html;
   requestAnimationFrame(() => { chatBody.scrollTop = chatBody.scrollHeight; });
@@ -415,23 +415,48 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
 
 const callDialog = document.querySelector('#call-dialog');
 const callFrame = document.querySelector('#call-frame');
-document.querySelector('#internet-call').onclick = async () => {
-  const room = `Skala-Consultation-${crypto.randomUUID()}`;
-  const url = `https://meet.jit.si/${room}`;
-  if (serverMode) {
-    try {
-      const row = await backend.sendMessage(`Интернет-звонок: ${url}`);
-      appendMessage(mapMessage(row));
-    } catch (error) {
-      notify(`Ссылка на звонок не добавлена в чат: ${error.message}`);
-    }
-  } else {
-    addLocalMessage('system', `Создана комната интернет-звонка: ${url}`);
+const internetCallButton = document.querySelector('#internet-call');
+const CALL_COOLDOWN_MS = 60 * 1000;
+let lastCallStartedAt = 0;
+let callStarting = false;
+
+internetCallButton.onclick = async () => {
+  if (!serverMode || !currentUser) {
+    authGate.hidden = false;
+    notify('Войдите в кабинет, чтобы начать звонок');
+    return;
   }
-  callDialog.showModal();
-  setTimeout(() => {
-    callFrame.innerHTML = `<iframe title="Интернет-звонок Skala" src="${url}#config.prejoinPageEnabled=true&config.startWithVideoMuted=true" allow="camera; microphone; fullscreen; display-capture; autoplay"></iframe>`;
-  }, 400);
+  if (callStarting) return;
+  const waitSeconds = Math.ceil((CALL_COOLDOWN_MS - (Date.now() - lastCallStartedAt)) / 1000);
+  if (waitSeconds > 0) {
+    notify(`Новый звонок можно начать через ${waitSeconds} сек.`);
+    return;
+  }
+
+  callStarting = true;
+  internetCallButton.disabled = true;
+  const room = `Skala-Consultation-${crypto.randomUUID().replaceAll('-', '')}`;
+  try {
+    const row = await backend.startCall(room);
+    appendMessage(mapMessage(row));
+    lastCallStartedAt = Date.now();
+    callDialog.showModal();
+    setTimeout(() => {
+      const frame = document.createElement('iframe');
+      frame.title = 'Интернет-звонок Skala';
+      frame.src = `https://meet.jit.si/${encodeURIComponent(room)}#config.prejoinPageEnabled=true&config.startWithVideoMuted=true`;
+      frame.allow = 'camera; microphone; fullscreen; autoplay';
+      frame.referrerPolicy = 'no-referrer';
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-presentation');
+      frame.setAttribute('allowfullscreen', '');
+      callFrame.replaceChildren(frame);
+    }, 400);
+  } catch (error) {
+    notify(`Не удалось начать звонок: ${error.message}`);
+  } finally {
+    callStarting = false;
+    internetCallButton.disabled = false;
+  }
 };
 
 document.querySelector('#close-call').onclick = () => {

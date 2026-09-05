@@ -1,4 +1,4 @@
-const CACHE = 'skala-client-v13';
+const CACHE = 'skala-client-v14';
 const ASSETS = [
   './', './index.html', './app.css', './server.css', './install.css', './app.js', './backend.js',
   './supabase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png',
